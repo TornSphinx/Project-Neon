@@ -1,5 +1,5 @@
 /* VERSION # 2.1
-   NOTE: This is a ground up written version for bot.cpp after the previous version failed due to Timeout 
+   NOTE: This is a ground up written version for bot.cpp after the previous version failed due to Timeout
    Author: Iftikhar Khan
    Class: {135,136}
    Instructor: S.Shankar
@@ -7,15 +7,15 @@
    Description: This is a Level 2 AI. That is, it only plays the game using simple observations; it is only one step up from the provided AI. The only advantages it has over the provided program are:
                 1) It marks surrounding areas after a ship is sunk. So, it doesn't need to hit those areas
                 2) After getting a hit, it tries to work in the neighbouring areas to get another hit.
-                3) It implements a 'Chessboard Strategy'. The chessboard strategy divides all the squares on the board into black and white squares. 
-                   Ideally, if the bot were to hit all the Black squares, It will hit all the ships at least once. 
+                3) It implements a 'Chessboard Strategy'. The chessboard strategy divides all the squares on the board into black and white squares.
+                   Ideally, if the bot were to hit all the Black squares, It will hit all the ships at least once.
                    However, if the smallest ship alive is of size 1, the strategy becomes less effective.
-   Observations: i) Both the postHit and postHit functions contain repetitive functions. In both cases, they perform almost similar functions in NORTH,SOUTH,EAST,WEST directions. 
-                ii) The Global char array termed replica has very few uses and provides very little advantages. However, its full potential can only be unlocked using Statistical Analysis to predict the position of the ships. 
+   Observations: i) Both the postHit and postHit functions contain repetitive functions. In both cases, they perform almost similar functions in NORTH,SOUTH,EAST,WEST directions.
+                ii) The Global char array termed replica has very few uses and provides very little advantages. However, its full potential can only be unlocked using Statistical Analysis to predict the position of the ships.
                iii) In the postSink function, the array operations on REPLICA has been thawed. It appears to create the same problem for postHit. Since, it is possible that the hit or sunk ship could be at the boundaries of the
-                    board, the addressing of the array's out of bounds results in a Segmentation Fault and dumped core. So, the code has been commented off. 
-  Release Notes: a) PostSink now works properly. However, for the future, it may be assisted using a helper function to stop the repetiteveness. 
-                 b) We now know that the ships are more likely to be around the centre of the board than the borders. This finding may be implemented in Version#3 of the project. The project will be added to on GitHub for future revisions.        
+                    board, the addressing of the array's out of bounds results in a Segmentation Fault and dumped core. So, the code has been commented off.
+  Release Notes: a) PostSink now works properly. However, for the future, it may be assisted using a helper function to stop the repetiteveness.
+                 b) We now know that the ships are more likely to be around the centre of the board than the borders. This finding may be implemented in Version#3 of the project. The project will be added to on GitHub for future revisions.
 */
 
 #include <cstdlib>
@@ -30,7 +30,7 @@ using namespace std;
 //TODO:Take these out, if we don't need them. (Update: We actually do)
 int ROWS;
 int COLS;
-//The Global 2D array to store the ship's hits. 
+//The Global 2D array to store the ship's hits.
 //This array will be partially filled, so we nee the Global ROWS and COLS as dimensions
 char replica[50][50];
 //This boolean is the only way to determine if there was a hit the previous round
@@ -42,7 +42,7 @@ int hitRow,hitCol;
 /*Implements a chessboard pattern in order to hunt ships efficiently.
   Should be used when board is initialised.
   Works best when sml > 1;
-  Input: 
+  Input:
   screen = to visualise the pattern
   row, col = dimensions
 */
@@ -66,7 +66,7 @@ void fillArray(){
       replica[i][j] = 'U';
     }
   }
-} 
+}
 /*-------------------------------*/
 /*This function searches for a char in the replica array. If it finds it, it changes the param to the result, if not, it changes them to -1,-1*/
 void search(char (&replica)[50][50], int x, int y, char item, int &foundx, int &foundy){
@@ -157,12 +157,42 @@ void postHit(int &row, int &col, Screen &screen){
 }
 
 /*-------------------------------*/
+/*This function is meant to compress the functions of postSink with a modifying enumerator */
+void postSinkHelper(int row, int col, Screen &screen, enum proto {'N','S','W','E'};){
+  int rowMod, colMod;
+  //TODO: Find the proper values for the modifying values that will return a proper value for the directions
+
+  switch (proto) {
+    case 'W':
+      //provide proper values for modifiers
+      break;
+    case 'N':
+      //Provide proper values for modifiers
+      break;
+    case 'S':
+      //Provide proper values for the modifiers
+      break;
+    case 'E':
+      //Provide proper values for the modifiers;
+      break;
+  }
+  screen.mark(row+rowMod,col-colMod,'x',BLUE);
+  do{
+    screen.mark(rowMod+colMod, colMod+rowMod, 'x', BLUE);
+    screen.mark(rowMod-colMod, colMod-rowMod,'x',BLUE);
+    row += rowMod;
+    col += colMod;
+  }while(screen.read(row,col) == '@');
+  screen.mark(row,col,'x',BLUE);
+  return;
+}
+
 /* This function takes row and col and changes the surrounding areas of the sunken ship and marks them as Miss in both the array and the screen. The reason the screen is marked is to support the logic of the postHit function */
 void postSink(int &row, int &col, Screen &screen){
-/*NOTE:We must make key observations before proceeding to develop an algorithm for this particular function. 
-  In regular games, it is possible that the final point of the hitting a ship;that is, the co-ordinate that results in the ship being 
+/*NOTE:We must make key observations before proceeding to develop an algorithm for this particular function.
+  In regular games, it is possible that the final point of the hitting a ship;that is, the co-ordinate that results in the ship being
   sunk can be in the middle of the ship. This hugely complicates things.
-  However, by merely looking at the postHit function and the arrangement of the ships in the board, we can implement the if-else branches 
+  However, by merely looking at the postHit function and the arrangement of the ships in the board, we can implement the if-else branches
   that would have had to be avoided. So, the algorithm is quite simple.
 */
   //If the hits are on the left,
@@ -206,7 +236,7 @@ void postSink(int &row, int &col, Screen &screen){
       screen.mark(tempRow, tempCol-1, 'x', BLUE);
       --tempRow;
     }while(screen.read(tempRow,tempCol) == '@');
-    screen.mark(tempRow,tempCol,'x', BLUE);  
+    screen.mark(tempRow,tempCol,'x', BLUE);
     return;
   }
   //If the hits are towards the North, which is most unlikely
@@ -224,7 +254,7 @@ void postSink(int &row, int &col, Screen &screen){
     return;
   }
 }
-  
+
 /*----------------------------*/
 /* This function chooses the coordinates of where to shoot */
 
@@ -239,12 +269,12 @@ void gunner(int &row, int &col, ostream &log, Screen &screen){
     return;
   }
   //else, ask to choose a random(UPDATE: Not necessarily) mark from the chessboard pattern
-  //we can only do so, if there is a chessboard strategy left. i.e. there is still a # left. 
-  //if there is a # left, then check for it. 
+  //we can only do so, if there is a chessboard strategy left. i.e. there is still a # left.
+  //if there is a # left, then check for it.
   int indX, indY;
   search(replica, ROWS, COLS, '#', indX, indY);
   //TODO:if ind is less than 0, find a sequential row and col to shoot
-  //To simplify, indX will never be 
+  //To simplify, indX will never be
   if (!(indX < 0)){
     row = indX;
     col = indY;
@@ -252,16 +282,16 @@ void gunner(int &row, int &col, ostream &log, Screen &screen){
   //If all the chessboard has been used and the ships haven't been sunk, (this only happens when there is still a ship of size 1 left on the board), do a sequential hit on the next available spot;
   else{
     //TODO:search through the array for an unexplored spot.
-    //To accomplish this, we have to write a function to fill the array with an arbitrary char. Otherwise, the search() function will have trouble. 
+    //To accomplish this, we have to write a function to fill the array with an arbitrary char. Otherwise, the search() function will have trouble.
     search(replica, ROWS, COLS, 'U', indX, indY);
     row = indX;
     col = indY;
   }
-} 
+}
 
 
 
-/*--------------------------------*/  
+/*--------------------------------*/
 /* Called once at the beginning
    input:
    rows, cols = size of the board
@@ -282,7 +312,7 @@ void init(int rows, int cols, int num, Screen &screen, ostream &log){
   isHit = false;
   log << "isHit is set to default value" << endl;
 }
-/* ------------------------*/ 
+/* ------------------------*/
 
 /* This function handles each turn of the game
    Input:
@@ -297,7 +327,7 @@ void next_turn (int sml, int lrg, int num, Gun &gun, Screen &screen, ostream &lo
   //Call the gunner
   gunner(row,col,log,screen);
   log << "Smallest: " << sml << " Largest: " << lrg << ". ";
-  log << "Shoot at " << row << " "<< col<< endl;  
+  log << "Shoot at " << row << " "<< col<< endl;
   result res = gun.shoot(row,col);
   //Display the results on the screen
   if(res == MISS){
@@ -322,4 +352,4 @@ void next_turn (int sml, int lrg, int num, Gun &gun, Screen &screen, ostream &lo
     //Call the postSink function and pass the rows and cols of the sunken ship as arguments
     postSink(row, col,screen);
   }
-}   
+}
