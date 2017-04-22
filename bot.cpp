@@ -76,7 +76,7 @@ void fillArray(){
    TODO:There is an alternative, however. Just implement a function that will check the if the value is within scope and set it to the coordinates.
         Then, it can be called after everytime the screen is updated.
 */
-void updateArray(char (&replica)[50][50], int x, int y, Screen &screen){
+void syncArray(char (&replica)[50][50], int x, int y, Screen &screen){
   for(int i = 0; i < x; ++i){
     for(int j = 0; j < y; ++j){
       if (screen.read(i,j) == 'x'){
@@ -89,7 +89,7 @@ void updateArray(char (&replica)[50][50], int x, int y, Screen &screen){
 /*-------------------------------*/
 /*This function searches for a char in the replica array. If it finds it, it changes the param to the result, if not, it changes them to -1,-1*/
 void search(char (&replica)[50][50], int x, int y, char item, int &foundx, int &foundy, Screen &screen){
-  updateArray(replica, x, y, screen);
+  syncArray(replica, x, y, screen);
   bool found = false;
   for(int i = 0; i < x; ++i){
     for(int j = 0; j < y; ++j){
