@@ -1,4 +1,4 @@
-/* VERSION # 2.0
+/* VERSION # 2.1
    NOTE: This is a ground up written version for bot.cpp after the previous version failed due to Timeout 
    Author: Iftikhar Khan
    Class: {135,136}
@@ -10,12 +10,12 @@
                 3) It implements a 'Chessboard Strategy'. The chessboard strategy divides all the squares on the board into black and white squares. 
                    Ideally, if the bot were to hit all the Black squares, It will hit all the ships at least once. 
                    However, if the smallest ship alive is of size 1, the strategy becomes less effective.
-   Observations: i) Both the postHit and postHit functions contain repetitive functions. In both cases, they perform almost similar functions in NORTH,SOUTH,EAST,WEST directions.
+   Observations: i) Both the postHit and postHit functions contain repetitive functions. In both cases, they perform almost similar functions in NORTH,SOUTH,EAST,WEST directions. 
                 ii) The Global char array termed replica has very few uses and provides very little advantages. However, its full potential can only be unlocked using Statistical Analysis to predict the position of the ships. 
                iii) In the postSink function, the array operations on REPLICA has been thawed. It appears to create the same problem for postHit. Since, it is possible that the hit or sunk ship could be at the boundaries of the
                     board, the addressing of the array's out of bounds results in a Segmentation Fault and dumped core. So, the code has been commented off. 
-   Release Notes:
-                 Version#2.1 will include the postHit function working properly. There is some logic error that creates a mess in the program and Core Dumping.
+  Release Notes: a) PostSink now works properly. However, for the future, it may be assisted using a helper function to stop the repetiteveness. 
+                 b) We now know that the ships are more likely to be around the centre of the board than the borders. This finding may be implemented in Version#3 of the project. The project will be added to on GitHub for future revisions.        
 */
 
 #include <cstdlib>
@@ -159,76 +159,72 @@ void postHit(int &row, int &col, Screen &screen){
 /*-------------------------------*/
 /* This function takes row and col and changes the surrounding areas of the sunken ship and marks them as Miss in both the array and the screen. The reason the screen is marked is to support the logic of the postHit function */
 void postSink(int &row, int &col, Screen &screen){
-  int tempRow, tempCol;
-  
-  tempRow = row;
-  tempCol = col;
-  //First, Secure the West side
-  //While west side is not unexplored or missing,
-  if(screen.read(tempRow,tempCol-1) == '@'){
-    while((screen.read(tempRow,tempCol-1) != '-' || screen.read(tempRow,tempCol-1) != 'x') && (tempCol-1 >= 0)){
-      //mark north and south as miss
-      screen.mark(tempRow+1,tempCol, 'x', BLUE);
+/*NOTE:We must make key observations before proceeding to develop an algorithm for this particular function. 
+  In regular games, it is possible that the final point of the hitting a ship;that is, the co-ordinate that results in the ship being 
+  sunk can be in the middle of the ship. This hugely complicates things.
+  However, by merely looking at the postHit function and the arrangement of the ships in the board, we can implement the if-else branches 
+  that would have had to be avoided. So, the algorithm is quite simple.
+*/
+  //If the hits are on the left,
+  int tempCol = col;
+  int tempRow = row;
+  if(screen.read(row,col-1) == '@'){
+    //Engage Westward protocol
+    //First, we must mark the immediate east side as MISS
+    screen.mark(row,col+1,'x',BLUE);
+    do{
+      //Since, this is a do-while loop, this will mark the actual 'S' surroundings and continue from there on.
+      screen.mark(tempRow+1,tempCol,'x',BLUE);
       screen.mark(tempRow-1,tempCol, 'x', BLUE);
-      //progress towards west
+      //It will continue going West
       --tempCol;
-    }
-    if(screen.read(tempRow,tempCol-1) == '-'){
-      //Mark it as missing as well
-      screen.mark(tempRow,tempCol-1,'x',BLUE);
-      //replica[tempRow][tempCol-1] = 'M';
-    }
+    }while(screen.read(tempRow,tempCol) == '@');
+    //After the loop ends,the coordinates of tempCol will be the exact coordinates we need to mark as our last Miss
+    screen.mark(tempRow,tempCol,'x',BLUE);
     return;
   }
-  
-  //Rinse
-  tempRow = row;
-  tempCol = col;
-  //Repeat
-  if(screen.read(tempRow,tempCol+1) == '@'){
-    
-    while((screen.read(tempRow,tempCol+1) != '-' || screen.read(tempRow, tempCol+1) != 'x') && (tempCol+1 <= COLS)){
-      screen.mark(tempRow+1,tempCol, 'x', BLUE);
-      screen.mark(tempRow-1, tempCol, 'x', BLUE);
+  //If the hits are on the right,
+  if(screen.read(row,col+1) == '@'){
+    //Engage Eastward protocol
+    //First, mark the West
+    screen.mark(row, col-1, 'x',BLUE);
+    do{
+      screen.mark(tempRow+1,tempCol,'x',BLUE);
+      screen.mark(tempRow-1,tempCol, 'x', BLUE);
       ++tempCol;
-    }
-    if(screen.read(tempRow, tempCol+1) == '-'){
-      screen.mark(tempRow, tempCol+1, 'x', BLUE);
-    }
+    }while(screen.read(tempRow,tempCol) == '@');
+    screen.mark(tempRow,tempCol,'x', BLUE);
     return;
   }
-  
-  //Rinse
-  tempRow = row;
-  tempCol = col;
-    //Repeat for North
-  if(screen.read(tempRow+1,tempCol) == '@'){
-    while((screen.read(tempRow+1, tempCol) != '-' || screen.read(tempRow+1, tempCol) != 'x') &&(tempRow+1 <= ROWS)){
-      screen.mark(tempRow, tempCol+1, 'x',BLUE);
-      screen.mark(tempRow, tempCol-1, 'x', BLUE);
-      ++tempRow;
-    }
-    if (screen.read(tempRow+1, tempCol) == '-'){
-      screen.mark(tempRow+1, tempCol, 'x', BLUE);
-    }
-    return;
-  }
-  
-  //One final time
-  tempRow = row;
-  tempCol = col;
-  if(screen.read(tempRow-1,tempCol) == '@'){
-    while((screen.read(tempRow-1, tempCol) != '-' || screen.read(tempRow-1,tempCol) != 'x') && (tempRow-1 >= 0)){
+  //If the hits are in the Bottom,
+  if(screen.read(row-1,col) == '@'){
+    //Engage South
+    //Mark immediate North
+    screen.mark(row+1, col,'x', BLUE);
+    do{
       screen.mark(tempRow, tempCol+1, 'x', BLUE);
       screen.mark(tempRow, tempCol-1, 'x', BLUE);
       --tempRow;
-    }
-    if(screen.read(tempRow-1, tempCol) == '-'){
-      screen.mark(tempRow-1,tempCol,'x', BLUE);
-    }
+    }while(screen.read(tempRow,tempCol) == '@');
+    screen.mark(tempRow,tempCol,'x', BLUE);  
+    return;
+  }
+  //If the hits are towards the North, which is most unlikely
+  //TODO:Verify if this is actually necessary...i.e. Due to the nature of the rest of the program, if there is a case where the hits are North of the Sink coordinates
+  if (screen.read(row+1,col) == '@'){
+    //Engage North
+    //Mark South as miss
+    screen.mark(row-1, col, 'x', BLUE);
+    do{
+      screen.mark(tempRow, tempCol+1, 'x', BLUE);
+      screen.mark(tempRow, tempCol-1, 'x', BLUE);
+      ++tempRow;
+    }while(screen.read(tempRow,tempCol) == '@');
+    screen.mark(tempRow,tempCol,'x',BLUE);
     return;
   }
 }
+  
 /*----------------------------*/
 /* This function chooses the coordinates of where to shoot */
 
@@ -286,7 +282,6 @@ void init(int rows, int cols, int num, Screen &screen, ostream &log){
   isHit = false;
   log << "isHit is set to default value" << endl;
 }
-
 /* ------------------------*/ 
 
 /* This function handles each turn of the game
@@ -302,8 +297,7 @@ void next_turn (int sml, int lrg, int num, Gun &gun, Screen &screen, ostream &lo
   //Call the gunner
   gunner(row,col,log,screen);
   log << "Smallest: " << sml << " Largest: " << lrg << ". ";
-  log << "Shoot at " << row << " "<< col<< endl;
-    
+  log << "Shoot at " << row << " "<< col<< endl;  
   result res = gun.shoot(row,col);
   //Display the results on the screen
   if(res == MISS){
@@ -326,7 +320,6 @@ void next_turn (int sml, int lrg, int num, Gun &gun, Screen &screen, ostream &lo
     replica[row][col] = 'S';
     isHit = false;
     //Call the postSink function and pass the rows and cols of the sunken ship as arguments
-    //TODO:Unfortunately the postSink function is not ready yet. 
     postSink(row, col,screen);
   }
 }   
