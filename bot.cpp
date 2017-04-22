@@ -67,10 +67,24 @@ void fillArray(){
       replica[i][j] = 'U';
     }
   }
-} 
+}
+
+/* -----------------------------*/
+/* This function ascertains that the array is in sync with the Screen */
+void updateArray(char (&replica)[50][50], int x, int y, Screen &screen){
+  for(int i = 0; i < x; ++i){
+    for(int j = 0; j < y; ++j){
+      if (screen.read(i,j) == 'x'){
+        replica[i][j] = 'M';
+      }
+    }
+  }
+}
+ 
 /*-------------------------------*/
 /*This function searches for a char in the replica array. If it finds it, it changes the param to the result, if not, it changes them to -1,-1*/
-void search(char (&replica)[50][50], int x, int y, char item, int &foundx, int &foundy){
+void search(char (&replica)[50][50], int x, int y, char item, int &foundx, int &foundy, Screen &screen){
+  updateArray(replica, x, y, screen);
   bool found = false;
   for(int i = 0; i < x; ++i){
     for(int j = 0; j < y; ++j){
@@ -89,6 +103,7 @@ void search(char (&replica)[50][50], int x, int y, char item, int &foundx, int &
 }
 
 /*-------------------------*/
+
 //TODO:Upon further analysis, there is a severe flaw within postHit.
 /*BUG: When executed, even if the ship's been hit several times, postHit returns coordinates, the ships possibly cannot be in. That is,
        postHit is not an intelligent hunter after hunting mode has been activated (labelled the 'UNWITTING' Bug). The function has to be written from the ground up in order to solve the issue.
@@ -245,7 +260,7 @@ void gunner(int &row, int &col, ostream &log, Screen &screen){
   //we can only do so, if there is a chessboard strategy left. i.e. there is still a # left. 
   //if there is a # left, then check for it. 
   int indX, indY;
-  search(replica, ROWS, COLS, '#', indX, indY);
+  search(replica, ROWS, COLS, '#', indX, indY, screen);
   //TODO:if ind is less than 0, find a sequential row and col to shoot
   //To simplify, indX will never be 
   if (!(indX < 0)){
@@ -256,7 +271,7 @@ void gunner(int &row, int &col, ostream &log, Screen &screen){
   else{
     //TODO:search through the array for an unexplored spot.
     //To accomplish this, we have to write a function to fill the array with an arbitrary char. Otherwise, the search() function will have trouble. 
-    search(replica, ROWS, COLS, 'U', indX, indY);
+    search(replica, ROWS, COLS, 'U', indX, indY, screen);
     row = indX;
     col = indY;
   }
