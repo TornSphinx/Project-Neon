@@ -1,4 +1,4 @@
-/* VERSION # 2.1
+/* VERSION # 2.2
    NOTE: This is a ground up written version for bot.cpp after the previous version failed due to Timeout
    Author: Iftikhar Khan
    Class: {135,136}
@@ -13,8 +13,8 @@
    Observations: i) Both the postHit and postHit functions contain repetitive functions. In both cases, they perform almost similar functions in NORTH,SOUTH,EAST,WEST directions.
                 ii) The Global char array termed replica has very few uses and provides very little advantages. However, its full potential can only be unlocked using Statistical Analysis to predict the position of the ship.
                iii) Since, marking the coordinates sometimes yields out of bound errors, I avoided using it during postSink and postHit functions. Although, useful this brings another nasty bug; the search() function returns values
-                    that it has already shot. TODO: Needs fixing.
-  Release Notes: a) PostSink now works properly. However, for the future, it may be assisted using a helper function to overcome the repetiteveness
+                    that it has already shot. UPDATE: fixed
+   Release Notes: a) PostSink now works properly. However, for the future, it may be assisted using a helper function to overcome the repetiteveness
                  b) We now know that the ships are more likely to be around the centre of the board than the borders. This finding may be implemented in Version#3 of the project. The project will be added to on GitHub for future revisions.
                  c) Version#2.2 should include a fix for the dreaded UNWITTING bug.TODO:Needs fixing. (Maybe beyond the scope of the project)
 */
@@ -75,7 +75,7 @@ void fillArray(){
    However, the number of turns it takes is greatly reduced.
    TODO:There is an alternative, however. Just implement a function that will check the if the value is within scope and set it to the coordinates.
         Then, it can be called after everytime the screen is updated.
-*/ 
+*/
 void updateArray(char (&replica)[50][50], int x, int y, Screen &screen){
   for(int i = 0; i < x; ++i){
     for(int j = 0; j < y; ++j){
