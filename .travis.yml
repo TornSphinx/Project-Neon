@@ -1,10 +1,10 @@
+language: cpp
 addons:
   apt:
     packages:
       - libncurses-dev
       - make
       - g++
-language: cpp
 compiler:
   - clang
   - gcc
