@@ -87,7 +87,7 @@ char readArray(int row, int col){
   if(inScope(row,col)){
     return replica[row][col];
   }
-  return '';
+  return ' ';
 }
 /*-------------------------------*/
 
@@ -283,7 +283,7 @@ void gunner(int &row, int &col, ostream &log, Screen &screen){
   //we can only do so, if there is a chessboard strategy left. i.e. there is still a # left.
   //if there is a # left, then check for it.
   int indX, indY;
-  search(replica, ROWS, COLS, '#', indX, indY, screen);
+  search(ROWS, COLS, '#', indX, indY, screen);
   //TODO:if ind is less than 0, find a sequential row and col to shoot
   //To simplify, indX will never be
   if (!(indX < 0)){
