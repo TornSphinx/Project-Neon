@@ -10,3 +10,8 @@ compiler:
   - gcc
 install: true
 script: make
+notifications:
+  email:
+    - iakhan4425@gmail.com
+  on_success: never
+  on_failure: always
