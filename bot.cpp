@@ -294,7 +294,7 @@ void gunner(int &row, int &col, ostream &log, Screen &screen){
   else{
     //TODO:search through the array for an unexplored spot.
     //To accomplish this, we have to write a function to fill the array with an arbitrary char. Otherwise, the search() function will have trouble.
-    search(replica, ROWS, COLS, 'U', indX, indY, screen);
+    search(ROWS, COLS, 'U', indX, indY, screen);
     row = indX;
     col = indY;
   }
