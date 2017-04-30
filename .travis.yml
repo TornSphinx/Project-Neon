@@ -12,4 +12,3 @@ install: true
 script: make
 notifications:
   slack: tornsphinx:Dexg5USrFdOVasbUji6SsLgP
-travis encrypt "tornsphinx:Dexg5USrFdOVasbUji6SsLgP" --add notifications.slack
