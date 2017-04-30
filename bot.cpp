@@ -1,8 +1,6 @@
-/* VERSION # 2.2
+/* VERSION # 0.1.2
    NOTE: This is a ground up written version for bot.cpp after the previous version failed due to Timeout
    Author: Iftikhar Khan
-   Class: {135,136}
-   Instructor: S.Shankar
    Assignment: Project 2
    Description: This is a Level 2 AI. That is, it only plays the game using simple observations; it is only one step up from the provided AI. The only advantages it has over the provided program are:
                 1) It marks surrounding areas after a ship is sunk. So, it doesn't need to hit those areas
@@ -15,8 +13,8 @@
                iii) Since, marking the coordinates sometimes yields out of bound errors, I avoided using it during postSink and postHit functions. Although, useful this brings another nasty bug; the search() function returns values
                     that it has already shot. UPDATE: fixed
    Release Notes: a) PostSink now works properly. However, for the future, it may be assisted using a helper function to overcome the repetiteveness
-                 b) We now know that the ships are more likely to be around the centre of the board than the borders. This finding may be implemented in Version#3 of the project. The project will be added to on GitHub for future revisions.
-                 c) Version#2.2 should include a fix for the dreaded UNWITTING bug.TODO:Needs fixing. (Maybe beyond the scope of the project)
+                  b) We now know that the ships are more likely to be around the centre of the board than the borders. This finding may be implemented in Version#1
+                  c) Version#0.2 should include a fix for the dreaded UNWITTING bug.TODO:Needs fixing.
 */
 
 #include <cstdlib>
@@ -32,13 +30,12 @@ int ROWS;
 int COLS;
 //The Global 2D array to store the ship's hits.
 //This array will be partially filled, so we nee the Global ROWS and COLS as dimensions
-char replica[50][50];
+char replica[40][40];
 //This boolean is the only way to determine if there was a hit the previous round
 bool isHit;
 //These are the only ways to keep the hit coordinates in track
 int hitRow,hitCol;
 int iter;
-
 /* -------------------------*/
 /*Implements a chessboard pattern in order to hunt ships efficiently.
   Should be used when board is initialised.
@@ -70,26 +67,32 @@ void fillArray(){
 }
 
 /* -----------------------------*/
-/* This function ascertains that the array is in sync with the Screen
-   This is an example of a very bad function. Since, it's a nested loop, it adds a factor of O(n*n) to the execution time.
-   However, the number of turns it takes is greatly reduced.
-   TODO:There is an alternative, however. Just implement a function that will check the if the value is within scope and set it to the coordinates.
-        Then, it can be called after everytime the screen is updated.
-*/
-void syncArray(char (&replica)[50][50], int x, int y, Screen &screen){
-  for(int i = 0; i < x; ++i){
-    for(int j = 0; j < y; ++j){
-      if (screen.read(i,j) == 'x'){
-        replica[i][j] = 'M';
-      }
-    }
+/* This function returns true if the co-ordinates are withing the scope of the array */
+bool inScope(int &row, int &col){
+  if (row <= ROWS && row >= 0 && col <= COLS && col >=0){
+    return true;
+  }
+  return false;
+}
+
+/* This function sets the provided value at the provided co-ordinates */
+void setArray(int row, int col, char value){
+  if(inScope(row,col)){
+    replica[row][col] = value;
   }
 }
 
+//Read the value from the given coordinates of the array
+char readArray(int row, int col){
+  if(inScope(row,col)){
+    return replica[row][col];
+  }
+  return '';
+}
 /*-------------------------------*/
+
 /*This function searches for a char in the replica array. If it finds it, it changes the param to the result, if not, it changes them to -1,-1*/
-void search(char (&replica)[50][50], int x, int y, char item, int &foundx, int &foundy, Screen &screen){
-  syncArray(replica, x, y, screen);
+void search(int x, int y, char item, int &foundx, int &foundy, Screen &screen){
   bool found = false;
   for(int i = 0; i < x; ++i){
     for(int j = 0; j < y; ++j){
@@ -195,15 +198,19 @@ void postSink(int &row, int &col, Screen &screen){
     //Engage Westward protocol
     //First, we must mark the immediate east side as MISS
     screen.mark(row,col+1,'x',BLUE);
+    setArray(row,col+1,'M');
     do{
       //Since, this is a do-while loop, this will mark the actual 'S' surroundings and continue from there on.
       screen.mark(tempRow+1,tempCol,'x',BLUE);
       screen.mark(tempRow-1,tempCol, 'x', BLUE);
+      setArray(tempRow+1,tempCol,'M');
+      setArray(tempRow-1,tempCol,'M');
       //It will continue going West
       --tempCol;
     }while(screen.read(tempRow,tempCol) == '@');
     //After the loop ends,the coordinates of tempCol will be the exact coordinates we need to mark as our last Miss
     screen.mark(tempRow,tempCol,'x',BLUE);
+    setArray(tempRow,tempCol,'M');
     return;
   }
   //If the hits are on the right,
@@ -211,12 +218,16 @@ void postSink(int &row, int &col, Screen &screen){
     //Engage Eastward protocol
     //First, mark the West
     screen.mark(row, col-1, 'x',BLUE);
+    setArray(tempRow,tempCol-1,'M');
     do{
       screen.mark(tempRow+1,tempCol,'x',BLUE);
       screen.mark(tempRow-1,tempCol, 'x', BLUE);
+      setArray(tempRow+1,tempCol,'M');
+      setArray(tempRow-1,tempCol,'M');
       ++tempCol;
     }while(screen.read(tempRow,tempCol) == '@');
     screen.mark(tempRow,tempCol,'x', BLUE);
+    setArray(tempRow,tempCol,'M');
     return;
   }
   //If the hits are in the Bottom,
@@ -224,26 +235,33 @@ void postSink(int &row, int &col, Screen &screen){
     //Engage South
     //Mark immediate North
     screen.mark(row+1, col,'x', BLUE);
+    setArray(row+1,col,'M');
     do{
       screen.mark(tempRow, tempCol+1, 'x', BLUE);
       screen.mark(tempRow, tempCol-1, 'x', BLUE);
+      setArray(tempRow,tempCol+1,'M');
+      setArray(tempRow,tempCol-1,'M');
       --tempRow;
     }while(screen.read(tempRow,tempCol) == '@');
     screen.mark(tempRow,tempCol,'x', BLUE);
+    setArray(tempRow,tempCol,'M');
     return;
   }
-  //If the hits are towards the North, which is most unlikely
-  //TODO:Verify if this is actually necessary...i.e. Due to the nature of the rest of the program, if there is a case where the hits are North of the Sink coordinates
+  //If the hits are towards the North,
   if (screen.read(row+1,col) == '@'){
     //Engage North
     //Mark South as miss
     screen.mark(row-1, col, 'x', BLUE);
+    setArray(row-1,col,'M');
     do{
       screen.mark(tempRow, tempCol+1, 'x', BLUE);
       screen.mark(tempRow, tempCol-1, 'x', BLUE);
+      setArray(tempRow,tempCol+1,'M');
+      setArray(tempRow,tempCol-1,'M');
       ++tempRow;
     }while(screen.read(tempRow,tempCol) == '@');
     screen.mark(tempRow,tempCol,'x',BLUE);
+    setArray(tempRow,tempCol,'M');
     return;
   }
 }
@@ -326,12 +344,13 @@ void next_turn (int sml, int lrg, int num, Gun &gun, Screen &screen, ostream &lo
   if(res == MISS){
     screen.mark(row,col, 'x', BLUE);
     //update the replica
-    replica[row][col] = 'M';
+    setArray(row,col,'M');
   }
   else if(res == HIT){
     screen.mark(row, col, '@', GREEN);
     //update the replica
     replica[row][col] = 'H';
+    setArray(row,col,'H');
     hitRow = row;
     hitCol = col;
     //update isHit
@@ -341,7 +360,7 @@ void next_turn (int sml, int lrg, int num, Gun &gun, Screen &screen, ostream &lo
   else if(res == HIT_N_SUNK){
     screen.mark(row, col, 'S', RED);
     //update replica and isHit
-    replica[row][col] = 'S';
+    setArray(row,col,'S');
     isHit = false;
     //Call the postSink function and pass the rows and cols of the sunken ship as arguments
     postSink(row, col,screen);
