@@ -8,6 +8,7 @@ addons:
 compiler:
   - clang
   - gcc
+  - mingw
 install: true
 script: make
 notifications:
