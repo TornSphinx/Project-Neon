@@ -1,15 +1,22 @@
 language: cpp
+os:
+  - linux
+  - osx
+matrix:
+  allow_failures:
+    -os: osx
+compiler:
+  - gcc
+  - clang
+  - mingw
 addons:
   apt:
     packages:
       - libncurses-dev
       - make
-      - g++
-compiler:
-  - clang
-  - gcc
-  - mingw
-install: true
+before_install:
+  - if [["$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
+  - if [["$TRAVIS_OS_NAME" == "osx"]]; then brew install libncurses-dev; fi
 script: make
 notifications:
   slack: tornsphinx:Dexg5USrFdOVasbUji6SsLgP
