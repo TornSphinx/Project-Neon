@@ -1,5 +1,6 @@
 SHELL   = /bin/sh
 INSTALL = install
+CC = $(CC)
 EXEC    = battleships
 
 # Sources
