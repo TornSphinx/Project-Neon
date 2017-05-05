@@ -1,6 +1,6 @@
 SHELL   = /bin/sh
 INSTALL = install
-CC = $(CC)
+CC = g++
 EXEC    = battleships
 
 # Sources
